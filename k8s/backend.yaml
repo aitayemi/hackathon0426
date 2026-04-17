@@ -52,8 +52,10 @@ metadata:
   name: backend
   namespace: supply-chain-agent
 spec:
+  type: LoadBalancer
   selector:
     app: backend
   ports:
     - port: 8000
       targetPort: 8000
+      protocol: TCP

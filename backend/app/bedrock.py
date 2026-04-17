@@ -42,7 +42,8 @@ OUTPUT_SCHEMA = """{
 
 
 async def analyze_incident(
-    incident: IncidentInput, business_context: dict | None = None
+###    incident: IncidentInput, business_context: dict | None = None
+    incident: IncidentInput, business_context: Union[dict, None] = None
 ) -> AnalysisResult:
     """Call Claude via Bedrock to analyze a supply chain disruption."""
 
