@@ -15,25 +15,25 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/supply-chain-agent-frontend:latest
+          # Replace ACCOUNT_ID and REGION
+          image: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/sc-agent-frontend:latest
           ports:
             - containerPort: 80
           resources:
-            requests:
-              cpu: 128m
-              memory: 128Mi
-            limits:
-              cpu: 256m
-              memory: 256Mi
+            requests: { cpu: 128m, memory: 128Mi }
+            limits: { cpu: 256m, memory: 256Mi }
 ---
+# Internet-facing NLB — gets a public IP automatically.
+# Requires: AWS Load Balancer Controller installed on the cluster
+# and public subnets tagged with kubernetes.io/role/elb=1
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend
   namespace: supply-chain-agent
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
 spec:
   type: LoadBalancer

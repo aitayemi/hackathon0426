@@ -1,4 +1,4 @@
-"""Data models for the Supply Chain Disruption Response Agent."""
+"""Pydantic data models — matches the incident schema from the architecture doc."""
 
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -28,6 +28,13 @@ class Status(str, Enum):
     RESOLVED = "resolved"
 
 
+class ResponseScore(str, Enum):
+    DO_NOTHING = "do_nothing"
+    MONITOR = "monitor"
+    MITIGATE = "mitigate"
+    ESCALATE = "escalate"
+
+
 class IncidentInput(BaseModel):
     """Incoming disruption event from supplier/logistics feed."""
     incidentId: Optional[str] = None
@@ -49,7 +56,7 @@ class RecommendedAction(BaseModel):
 
 
 class AnalysisResult(BaseModel):
-    """Claude's structured analysis output."""
+    """Claude's structured JSON output."""
     incidentId: str
     severity: Severity
     summary: str
@@ -61,15 +68,8 @@ class AnalysisResult(BaseModel):
     escalationReason: Optional[str] = None
 
 
-class ResponseScore(str, Enum):
-    DO_NOTHING = "do_nothing"
-    MONITOR = "monitor"
-    MITIGATE = "mitigate"
-    ESCALATE = "escalate"
-
-
 class ResponseCard(BaseModel):
-    """The final response card shown to operations users."""
+    """Decision card shown to operations users."""
     incidentId: str
     timestamp: datetime
     sourceType: SourceType
@@ -89,7 +89,7 @@ class ResponseCard(BaseModel):
 
 
 class Incident(BaseModel):
-    """Full incident record stored in the database."""
+    """Full incident record for storage."""
     incidentId: str
     input: IncidentInput
     analysis: Optional[AnalysisResult] = None

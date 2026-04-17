@@ -4,7 +4,6 @@ __pycache__/
 node_modules/
 dist/
 .terraform/
-*.tfstate
-*.tfstate.backup
+*.tfstate*
 .terraform.lock.hcl
 .DS_Store

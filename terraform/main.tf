@@ -2,26 +2,17 @@ provider "aws" {
   region = var.aws_region
 }
 
-# DynamoDB table for incident storage
 resource "aws_dynamodb_table" "incidents" {
-  name         = "${var.project_name}-incidents"
+  name         = "${var.project}-incidents"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "incidentId"
-
-  attribute {
-    name = "incidentId"
-    type = "S"
-  }
-
-  tags = {
-    Project = var.project_name
-  }
+  attribute { name = "incidentId"; type = "S" }
+  tags = { Project = var.project }
 }
 
-# SNS topic for escalation notifications
 resource "aws_sns_topic" "escalation" {
-  name = "${var.project_name}-escalation"
-  tags = { Project = var.project_name }
+  name = "${var.project}-escalation"
+  tags = { Project = var.project }
 }
 
 resource "aws_sns_topic_subscription" "email" {
@@ -31,50 +22,44 @@ resource "aws_sns_topic_subscription" "email" {
   endpoint  = var.sns_email
 }
 
-# ECR repositories
 resource "aws_ecr_repository" "backend" {
-  name                 = "${var.project_name}-backend"
+  name                 = "${var.project}-backend"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
-  tags                 = { Project = var.project_name }
+  tags                 = { Project = var.project }
 }
 
 resource "aws_ecr_repository" "frontend" {
-  name                 = "${var.project_name}-frontend"
+  name                 = "${var.project}-frontend"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
-  tags                 = { Project = var.project_name }
+  tags                 = { Project = var.project }
 }
 
-# IAM role for EKS pods to access Bedrock + DynamoDB + SNS
 data "aws_eks_cluster" "cluster" {
   name = var.eks_cluster_name
 }
 
-resource "aws_iam_role" "agent_role" {
-  name = "${var.project_name}-bedrock-role"
-
+resource "aws_iam_role" "agent" {
+  name = "${var.project}-bedrock-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Federated = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
-      }
-      Action = "sts:AssumeRoleWithWebIdentity"
+      Effect    = "Allow"
+      Principal = { Federated = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer }
+      Action    = "sts:AssumeRoleWithWebIdentity"
       Condition = {
         StringEquals = {
-          "${replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:supply-chain-agent:supply-chain-agent-sa"
+          "${replace(data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer, "https://", "")}:sub" = "system:serviceaccount:supply-chain-agent:sc-agent-sa"
         }
       }
     }]
   })
 }
 
-resource "aws_iam_role_policy" "agent_policy" {
-  name = "${var.project_name}-policy"
-  role = aws_iam_role.agent_role.id
-
+resource "aws_iam_role_policy" "agent" {
+  name = "${var.project}-policy"
+  role = aws_iam_role.agent.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

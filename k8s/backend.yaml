@@ -13,10 +13,11 @@ spec:
       labels:
         app: backend
     spec:
-      serviceAccountName: supply-chain-agent-sa
+      serviceAccountName: sc-agent-sa
       containers:
         - name: backend
-          image: ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/supply-chain-agent-backend:latest
+          # Replace ACCOUNT_ID and REGION
+          image: ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/sc-agent-backend:latest
           ports:
             - containerPort: 8000
           env:
@@ -29,31 +30,26 @@ spec:
             - name: DYNAMODB_TABLE
               value: "supply-chain-incidents"
           resources:
-            requests:
-              cpu: 256m
-              memory: 512Mi
-            limits:
-              cpu: 512m
-              memory: 1Gi
+            requests: { cpu: 256m, memory: 512Mi }
+            limits: { cpu: 512m, memory: 1Gi }
           livenessProbe:
-            httpGet:
-              path: /health
-              port: 8000
+            httpGet: { path: /health, port: 8000 }
             initialDelaySeconds: 10
           readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
+            httpGet: { path: /health, port: 8000 }
             initialDelaySeconds: 5
 ---
+# Internet-facing NLB — gets a public IP automatically.
+# Requires: AWS Load Balancer Controller installed on the cluster
+# and public subnets tagged with kubernetes.io/role/elb=1
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
   namespace: supply-chain-agent
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
     service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
 spec:
   type: LoadBalancer

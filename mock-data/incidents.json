@@ -1,9 +1,7 @@
 [
   {
-    "incidentId": "SC-001",
     "sourceType": "logistics",
     "sourceName": "Port of Long Beach",
-    "timestamp": "2026-04-16T12:00:00Z",
     "region": "US-West",
     "affectedLane": "Shanghai -> Phoenix",
     "supplier": "Supplier A",
@@ -12,10 +10,8 @@
     "priorityCustomers": ["Customer-X"]
   },
   {
-    "incidentId": "SC-002",
     "sourceType": "supplier",
     "sourceName": "Supplier B Factory",
-    "timestamp": "2026-04-15T08:30:00Z",
     "region": "EMEA",
     "affectedLane": "Hamburg -> Chicago",
     "supplier": "Supplier B",
@@ -24,15 +20,12 @@
     "priorityCustomers": ["Customer-Y"]
   },
   {
-    "incidentId": "SC-003",
     "sourceType": "weather",
     "sourceName": "NOAA Weather Alert",
-    "timestamp": "2026-04-16T06:00:00Z",
     "region": "US-Southeast",
     "affectedLane": "Savannah -> Atlanta",
-    "supplier": null,
     "event": "Category 2 hurricane expected to impact port operations for 5 days",
-    "affectedProducts": ["SKU-101", "SKU-550", "SKU-612"],
+    "affectedProducts": ["SKU-101", "SKU-550"],
     "priorityCustomers": ["Customer-X", "Customer-Z"]
   }
 ]

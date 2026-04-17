@@ -1,68 +1,58 @@
-"""Escalation service — sends alerts for high-severity incidents."""
+"""Escalation service — SNS/Slack alerts when severity crosses threshold."""
 
 import os
-import json
 import logging
 import boto3
 import httpx
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
-SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN")
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
-ESCALATION_THRESHOLD = os.getenv("ESCALATION_THRESHOLD", "high")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+SNS_TOPIC = os.getenv("SNS_TOPIC_ARN")
+SLACK_URL = os.getenv("SLACK_WEBHOOK_URL")
+THRESHOLD = os.getenv("ESCALATION_THRESHOLD", "high")
+REGION = os.getenv("AWS_REGION", "us-east-1")
 
-SEVERITY_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+_RANK = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 
-def should_escalate(severity: str, explicit_escalate: bool = False) -> bool:
-    """Check if severity meets the escalation threshold."""
-    if explicit_escalate:
+def should_escalate(severity: str, explicit: bool = False) -> bool:
+    if explicit:
         return True
-    threshold = SEVERITY_RANK.get(ESCALATION_THRESHOLD, 2)
-    current = SEVERITY_RANK.get(severity, 0)
-    return current >= threshold
+    return _RANK.get(severity, 0) >= _RANK.get(THRESHOLD, 2)
 
 
 async def send_escalation(incident_id: str, severity: str, summary: str, reason: str) -> dict:
-    """Send escalation notifications via configured channels."""
-    results = {"sns": None, "slack": None}
-    message = (
+    results = {}
+    msg = (
         f"🚨 Supply Chain Escalation — {severity.upper()}\n"
         f"Incident: {incident_id}\n"
         f"Summary: {summary}\n"
         f"Reason: {reason}"
     )
 
-    if SNS_TOPIC_ARN:
+    if SNS_TOPIC:
         try:
-            sns = boto3.client("sns", region_name=AWS_REGION)
-            sns.publish(
-                TopicArn=SNS_TOPIC_ARN,
-                Subject=f"[{severity.upper()}] Supply Chain Alert: {incident_id}",
-                Message=message,
+            boto3.client("sns", region_name=REGION).publish(
+                TopicArn=SNS_TOPIC,
+                Subject=f"[{severity.upper()}] SC Alert: {incident_id}",
+                Message=msg,
             )
             results["sns"] = "sent"
         except Exception as e:
-            logger.error(f"SNS escalation failed: {e}")
+            log.error(f"SNS failed: {e}")
             results["sns"] = f"error: {e}"
 
-    if SLACK_WEBHOOK_URL:
+    if SLACK_URL:
         try:
-            async with httpx.AsyncClient() as client:
-                await client.post(
-                    SLACK_WEBHOOK_URL,
-                    json={"text": message},
-                    timeout=10,
-                )
+            async with httpx.AsyncClient() as c:
+                await c.post(SLACK_URL, json={"text": msg}, timeout=10)
             results["slack"] = "sent"
         except Exception as e:
-            logger.error(f"Slack escalation failed: {e}")
+            log.error(f"Slack failed: {e}")
             results["slack"] = f"error: {e}"
 
-    if not SNS_TOPIC_ARN and not SLACK_WEBHOOK_URL:
-        logger.warning(f"No escalation channels configured. Logging only: {message}")
+    if not SNS_TOPIC and not SLACK_URL:
+        log.warning(f"No escalation channels configured. {msg}")
         results["logged"] = True
 
     return results
