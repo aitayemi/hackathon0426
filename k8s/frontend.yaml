@@ -32,8 +32,10 @@ metadata:
   name: frontend
   namespace: supply-chain-agent
 spec:
+  type: LoadBalancer
   selector:
     app: frontend
   ports:
     - port: 80
       targetPort: 80
+      protocol: TCP
