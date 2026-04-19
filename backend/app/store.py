@@ -34,3 +34,11 @@ def get_incident(incident_id: str) -> Optional[dict]:
 def list_incidents() -> list[dict]:
     items = _table().scan().get("Items", []) if USE_DYNAMO else list(_mem.values())
     return sorted(items, key=lambda x: x.get("createdAt", ""), reverse=True)
+
+
+def update_incident(incident_id: str, data: dict) -> None:
+    """Update an existing incident record."""
+    if USE_DYNAMO:
+        _table().put_item(Item=data)
+    else:
+        _mem[incident_id] = data

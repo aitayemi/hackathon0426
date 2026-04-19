@@ -26,10 +26,14 @@ Supplier/Logistics Alerts ──► Ingestion API (EKS) ──► Event Normaliz
 ## What It Does
 
 1. Ingests disruption events (supplier delays, port congestion, weather alerts)
-2. Normalizes and enriches with business context (lane, SKU, supplier criticality)
-3. Claude classifies severity, identifies impact, and drafts mitigation actions
-4. Generates a response card with top 3 recommended actions + response score
-5. Escalates high-severity incidents via SNS/Slack/Email
+2. Validates inputs through guardrails (length, region, bounds checking)
+3. Runs predictive risk scoring (rules-based model, swappable for ML)
+4. Enriches with business context (lane, SKU, supplier criticality)
+5. Claude classifies severity, identifies impact, and drafts mitigation actions
+6. Validates Claude's output through guardrails (confidence, action count, consistency)
+7. Generates a response card with risk prediction + top 3 recommended actions
+8. High-severity incidents enter approval gate — human must approve before escalation
+9. On approval (or auto for lower severity), escalates via SNS/Slack/Email
 
 ## Quick Start (Local)
 
@@ -61,8 +65,10 @@ Ensure your public subnets are tagged: `kubernetes.io/role/elb = 1`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/incidents/analyze` | Submit + analyze with Claude |
+| POST | `/incidents/analyze` | Full pipeline: guardrails → predict → enrich → Claude → approve |
 | POST | `/incidents` | Submit without analysis |
+| POST | `/predict` | Risk prediction only (no LLM cost) |
+| POST | `/incidents/{id}/approve` | Approve or reject pending incident |
 | GET | `/incidents` | List all incidents |
 | GET | `/incidents/{id}` | Get incident + response card |
 | GET | `/health` | Health check |

@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "agent" {
       },
       {
         Effect   = "Allow"
-        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan"]
+        Action   = ["dynamodb:PutItem", "dynamodb:GetItem", "dynamodb:Scan", "dynamodb:UpdateItem"]
         Resource = [aws_dynamodb_table.incidents.arn]
       },
       {

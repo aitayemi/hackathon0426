@@ -22,6 +22,9 @@ class Severity(str, Enum):
 
 class Status(str, Enum):
     OPEN = "open"
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
     MONITORING = "monitoring"
     MITIGATING = "mitigating"
     ESCALATED = "escalated"
@@ -86,6 +89,15 @@ class ResponseCard(BaseModel):
     escalate: bool
     escalationReason: Optional[str] = None
     enrichment: Optional[dict] = None
+    riskPrediction: Optional[dict] = None
+    guardrailWarnings: list[str] = []
+
+
+class ApprovalAction(BaseModel):
+    """Approve or reject a pending response card."""
+    action: str  # "approve" or "reject"
+    reviewer: str
+    comment: Optional[str] = None
 
 
 class Incident(BaseModel):
@@ -94,5 +106,6 @@ class Incident(BaseModel):
     input: IncidentInput
     analysis: Optional[AnalysisResult] = None
     responseCard: Optional[ResponseCard] = None
+    approval: Optional[ApprovalAction] = None
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
